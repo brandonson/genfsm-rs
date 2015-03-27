@@ -1,0 +1,11 @@
+[package]
+name = "genfsm"
+version = "0.0.1"
+authors = ["Brandon Sanderson <bas.bsanders@gmail.com>"]
+
+description = "A simple generic finite state machine library."
+repository = "https://github.com/brandonson/genfsm"
+
+readme = "README.nd"
+license = "MIT"
+
