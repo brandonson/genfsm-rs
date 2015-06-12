@@ -53,31 +53,29 @@ impl<S,I> StateMachine<S,I>{
   ///Processes new input, using the current executor
   ///to update state.
   pub fn process(&mut self, input_val:I){
-    let mut next_state_opt:Option<NextState<S,I>> = None;
-    let old_state = self.current_state.take().unwrap();
-    match self.next_executor {
-      None => {}
-      Some(ref executor) =>
-        next_state_opt = Some((*executor)(old_state, input_val))
-    };
-    match next_state_opt {
-      None => {}
-      Some(next_state) =>
-        match next_state {
-          NextState::ChangeState(exec, state) => {
-            self.next_executor = Some(exec);
-            self.current_state = Some(state);
-          }
-          NextState::Continue(state) => {
-            self.current_state = Some(state);
-          }
-          NextState::End(state) => {
-            self.next_executor = None;
-            self.current_state = Some(state);
-          }
+    if let Some(executor) = self.next_executor.take() {
+
+      let old_state = self.current_state.take().unwrap();
+
+      let next_state = executor(old_state, input_val);
+
+      match next_state {
+        NextState::ChangeState(exec, state) => {
+          self.next_executor = Some(exec);
+          self.current_state = Some(state);
         }
+        NextState::Continue(state) => {
+          self.current_state = Some(state);
+        }
+        NextState::End(state) => {
+          self.next_executor = None;
+          self.current_state = Some(state);
+        }
+      }
     }
   }
+
+  ///Returns true if there is no executor to handle additional input.
   pub fn is_complete(&self) -> bool{
     self.next_executor.is_none()
   }
@@ -115,6 +113,9 @@ fn simple_storage(){
   assert!(state_machine.clone_state() == Some(2));
   state_machine.process(0);
   assert!(state_machine.is_complete());
+  state_machine.process(10);
+  assert!(state_machine.is_complete());
+  assert!(state_machine.extract_state() == Some(2));
 }
 
 #[cfg(test)]
